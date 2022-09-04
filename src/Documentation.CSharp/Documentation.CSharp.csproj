@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Platforms>x86;x64</Platforms>
+        <Configurations>Debug;Release</Configurations>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+    
+    <PropertyGroup>
+        <AssemblyName>dcs</AssemblyName>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net7.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    
+    <PropertyGroup Condition="$(Configuration) == 'Release'">
+        <PublishSingleFile>true</PublishSingleFile>
+        <SelfContained>true</SelfContained>
+        <RuntimeIdentifier Condition="$(Platform) == 'x86'">win-x86</RuntimeIdentifier>
+        <RuntimeIdentifier Condition="$(Platform) == 'x64'">win-x64</RuntimeIdentifier>
+        <PublishReadyToRun>true</PublishReadyToRun>
+        <DebugType>embedded</DebugType>
+        <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+        <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+        <PublishTrimmed>true</PublishTrimmed>
+        <TrimMode>link</TrimMode>
+    </PropertyGroup>
+    
+    <ItemGroup>
+      <PackageReference Include="System.CodeDom" Version="7.0.0-preview.7.22375.6" />
+      <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+      <PackageReference Include="System.Reflection.MetadataLoadContext" Version="7.0.0-preview.7.22375.6" />
+    </ItemGroup>
+
+</Project>
