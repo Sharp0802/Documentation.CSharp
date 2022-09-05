@@ -405,6 +405,40 @@ public class SourceGenerator
             WriteModifier(modifier);
         }
     }
+
+    private void WriteInherits(Type target)
+    {
+        var inherits = new Queue<Type>();
+        
+        if (target.BaseType is { } @base && @base != typeof(object)) 
+            inherits.Enqueue(@base);
+
+        var interfaces = target.GetInterfaces();
+        interfaces = interfaces.Except(interfaces.SelectMany(t => t.GetInterfaces())).ToArray();
+        foreach (var @interface in interfaces)
+            inherits.Enqueue(@interface);
+
+        if (inherits.Count > 0)
+        {
+            Builder.Append(':');
+            WriteSpace();
+
+            var first = true;
+            for (var i = 0; i < inherits.Count; ++i)
+            {
+                var inherit = inherits.Dequeue();
+
+                if (!first)
+                {
+                    Builder.Append(',');
+                    WriteSpace();
+                }
+                WriteTypeNameRaw(inherit);
+
+                first = false;
+            }
+        }
+    }
     
     public void WriteMethodInfo(MethodInfo method)
     {
@@ -621,6 +655,115 @@ public class SourceGenerator
         WriteIdentifier(@event.Name);
         WriteSpace();
         Builder.Append("{ add; remove; }");
+    }
+
+    public void WriteConstructorInfo(ConstructorInfo ctor)
+    {
+        foreach (var attribute in ctor.GetCustomAttributesData())
+        {
+            if (attribute.AttributeType.FullName?.Equals(
+                    "System.Runtime.CompilerServices.NullableContextAttribute",
+                    StringComparison.Ordinal) ?? false)
+                continue;
+            WriteAttribute(attribute, null, true);
+            WriteLinebreak();
+        }
+        
+        WriteAccessibility(AccessibilityHelper.GetAccessibility(ctor));
+        WriteSpace();
+        WriteTypeName(ctor.ReflectedType!, false);
+        WriteParameters(ctor.GetParameters(), true);
+        Builder.Append(';');
+    }
+
+    public void WriteTypeInfo(Type type)
+    {
+        foreach (var attribute in type.GetCustomAttributesData())
+        {
+            if (attribute.AttributeType.FullName?.Equals(
+                    "System.Runtime.CompilerServices.NullableContextAttribute",
+                    StringComparison.Ordinal) ?? false)
+                continue;
+            WriteAttribute(attribute, null, true);
+            WriteLinebreak();
+        }
+        
+        WriteAccessibility(AccessibilityHelper.GetAccessibility(type));
+        WriteModifiers(ModifierHelper.GetModifiers(type));
+        WriteSpace();
+
+        var isDelegate = type == typeof(Delegate) || type.IsSubclassOf(typeof(Delegate));
+        
+        if (type.IsEnum) // enum
+        {
+            Builder.Append("enum");
+        }
+        else if (type.IsClass)
+        {
+            var isRecord = type
+                .GetProperties(BindingFlags.NonPublic | BindingFlags.Instance)
+                .Any(property => property.Name.Equals("EqualityContract", StringComparison.Ordinal)
+                                 && property.PropertyType == typeof(Type)
+                                 && property.GetCustomAttribute<CompilerGeneratedAttribute>() is not null);
+
+            if (isRecord)
+                Builder.Append("record");
+            else
+                Builder.Append("class");
+        }
+        else if (type.IsInterface) // interface
+        {
+            Builder.Append("interface");
+        }
+        else if (type.IsValueType)
+        {
+            if (type.IsByRefLike)
+                Builder.Append("ref");
+            Builder.Append("struct");
+        }
+        else if (isDelegate) // delegate
+        {
+            Builder.Append("delegate");
+        }
+        else
+        {
+            // TODO: fallback
+        }
+        
+        WriteSpace();
+        
+        if (isDelegate)
+        {
+            GetDelegateInfo(type, out var genericArgs, out var parameters, out var @return);
+            
+            WriteTypeName(@return.ParameterType, @return.GetCustomAttributesData().Any(IsNullable));
+            WriteSpace();
+            WriteTypeNameRaw(type);
+            WriteGenericArguments(genericArgs);
+            WriteParameters(parameters, true);
+            WriteSpace();
+
+            new PropertyInfo().GetRequiredCustomModifiers();
+            
+            WriteGenericArgumentConstraints(genericArgs, true);
+        }
+        else if (type.IsEnum)
+        {
+            WriteTypeNameRaw(type);
+            WriteSpace();
+            Builder.Append(':');
+            WriteSpace();
+            WriteTypeName(type.GetEnumUnderlyingType(), false);
+        }
+        else
+        {
+            WriteTypeNameRaw(type);
+            WriteGenericArguments(type.GetGenericArguments());
+            WriteSpace();
+            WriteInherits(type);
+            WriteSpace();
+            WriteGenericArgumentConstraints(type.GetGenericArguments(), true);
+        }
     }
     
     private void WriteLinebreak()
