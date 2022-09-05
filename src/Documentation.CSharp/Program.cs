@@ -1,8 +1,14 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Xml.Linq;
+using Documentation.CSharp.Compiler;
 
 namespace Documentation.CSharp;
+
+public abstract class AA<T> where T : unmanaged
+{
+        
+}
 
 internal class Program
 {
@@ -10,6 +16,10 @@ internal class Program
     {
         Console.WriteLine(RuntimeEnvironment.GetRuntimeDirectory());
 
+        var src = new SourceGenerator();
+        src.WriteTypeInfo(typeof(AA<>));
+        Console.WriteLine(src.ToString());
+        
         /*
         var docsOpt = new Option<FileInfo?>(
             name: "--xml",
