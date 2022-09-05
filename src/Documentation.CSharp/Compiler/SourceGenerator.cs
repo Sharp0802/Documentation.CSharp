@@ -55,7 +55,28 @@ public class SourceGenerator
         return builder.ToString();
     }
 
-    private static string TypeToString(Type type, bool nullable)
+    private static void GetDelegateInfo(
+        Type type, 
+        out Type[] genericArgs, 
+        out ParameterInfo[] parameters, 
+        out ParameterInfo @return)
+    {
+        var invoker = type
+            .GetMethods(BindingFlags.Public | BindingFlags.Instance)
+            .Single(method => method.Name.Equals("Invoke") && 
+                              (method.Attributes & MethodAttributes.HideBySig) != 0 &&
+                              (method.Attributes & MethodAttributes.NewSlot) != 0 &&
+                              (method.Attributes & MethodAttributes.Virtual) != 0 &&
+                              method.CallingConvention == CallingConventions.Standard &&
+                              // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
+                              (method.MethodImplementationFlags & MethodImplAttributes.Runtime) != 0);
+
+        genericArgs = type.GetGenericArguments();
+        parameters = invoker.GetParameters();
+        @return = invoker.ReturnParameter;
+    }
+    
+    private static string TypeToString(Type type, bool nullable, bool raw)
     {
         string str;
         if (type.IsGenericParameter)
@@ -64,12 +85,12 @@ public class SourceGenerator
         }
         else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
         {
-            str = TypeToString(type.GetGenericArguments()[0], false);
+            str = TypeToString(type.GetGenericArguments()[0], false, raw);
             nullable = true;
         }
         else if (type.IsByRef)
         {
-            str = TypeToString(type.GetElementType()!, false);
+            str = TypeToString(type.GetElementType()!, false, raw);
         }
         else if (type.IsArray)
         {
@@ -80,7 +101,7 @@ public class SourceGenerator
                 type = type.GetElementType()!;
             }
 
-            sb.Insert(0, TypeToString(type, false));
+            sb.Insert(0, TypeToString(type, false, raw));
 
             str = sb.ToString();
         }
@@ -94,7 +115,7 @@ public class SourceGenerator
             }
 
             var sb = new StringBuilder();
-            sb.Append(TypeToString(type, false)).Append('*', i);
+            sb.Append(TypeToString(type, false, raw)).Append('*', i);
 
             str = sb.ToString();
         }
@@ -118,7 +139,13 @@ public class SourceGenerator
             else if (type == typeof(ushort)) str = "ushort";
             else if (type == typeof(object)) str = "object";
             else if (type == typeof(string)) str = "string";
-            else str = type.FullName!;
+            else
+            {
+                str = raw ? type.Name : type.FullName!;
+                var genericPos = str.LastIndexOf('`');
+                if (genericPos != -1) 
+                    str = str.Remove(genericPos);
+            }
         }
 
         if (nullable) str += '?';
@@ -138,9 +165,14 @@ public class SourceGenerator
         Builder.Append(EscapeIdentifier(id));
     }
 
-    private void WriteType(Type type, bool nullable)
+    private void WriteTypeName(Type type, bool nullable)
     {
-        Builder.Append(TypeToString(type, nullable));
+        Builder.Append(TypeToString(type, nullable, false));
+    }
+
+    private void WriteTypeNameRaw(Type type)
+    {
+        Builder.Append(TypeToString(type, false, true));
     }
     
     private void WriteAttribute(CustomAttributeData data, string? prefix, bool addBracket)
@@ -245,7 +277,7 @@ public class SourceGenerator
         Builder.Append(direction);
         
         if (direction.Length > 0) WriteSpace();
-        WriteType(parameter.ParameterType, nullable);
+        WriteTypeName(parameter.ParameterType, nullable);
         WriteSpace();
         WriteIdentifier(parameter.Name!);
 
@@ -294,7 +326,7 @@ public class SourceGenerator
             if ((attributes & GenericParameterAttributes.Contravariant) != 0)
                 Builder.Append("in ");
 
-            WriteType(argument, false);
+            WriteTypeName(argument, false);
             first = false;
         }
         
@@ -333,12 +365,12 @@ public class SourceGenerator
                 }
                 else
                 {
-                    constraintsStrings.Insert(0, TypeToString(constraint, false));
+                    constraintsStrings.Insert(0, TypeToString(constraint, false, false));
                 }
             }
 
             builder.Append("where ");
-            builder.Append(TypeToString(argument, false));
+            builder.Append(TypeToString(argument, false, false));
             builder.Append(" : ");
             builder.Append(string.Join(", ", constraintsStrings));
             if (onNextLine)
@@ -395,7 +427,7 @@ public class SourceGenerator
         WriteAccessibility(AccessibilityHelper.GetAccessibility(method));
         WriteModifiers(ModifierHelper.GetModifiers(method));
         WriteSpace();
-        WriteType(method.ReturnType, method.ReturnParameter.GetCustomAttributesData().Any(IsNullable));
+        WriteTypeName(method.ReturnType, method.ReturnParameter.GetCustomAttributesData().Any(IsNullable));
         WriteSpace();
 
         // private impl
@@ -417,7 +449,7 @@ public class SourceGenerator
         WriteAccessibility(AccessibilityHelper.GetAccessibility(field));
         WriteSpace();
         WriteModifiers(ModifierHelper.GetModifiers(field));
-        WriteType(field.FieldType, field.GetCustomAttributesData().Any(IsNullable));
+        WriteTypeName(field.FieldType, field.GetCustomAttributesData().Any(IsNullable));
         WriteSpace();
         WriteIdentifier(field.Name);
         Builder.Append(';');
@@ -444,7 +476,7 @@ public class SourceGenerator
             WriteSpace();   
         }
         
-        WriteType(property.PropertyType, property.GetCustomAttributesData().Any(IsNullable));
+        WriteTypeName(property.PropertyType, property.GetCustomAttributesData().Any(IsNullable));
         WriteSpace();
         
         // private impl
@@ -581,7 +613,7 @@ public class SourceGenerator
 
         Builder.Append("event");
         WriteSpace();
-        WriteType(@event.EventHandlerType!, false);
+        WriteTypeName(@event.EventHandlerType!, false);
         WriteSpace();
         
         // private impl
