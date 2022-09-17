@@ -1,67 +1,106 @@
-﻿using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Xml.Linq;
-using Documentation.CSharp.Compiler;
+﻿using System.CommandLine;
+using System.CommandLine.Parsing;
+using Microsoft.Build.Logging;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.MSBuild;
 
 namespace Documentation.CSharp;
 
-public abstract class AA<T> where T : unmanaged
-{
-        
-}
-
 internal class Program
 {
-    private static async Task Main(string[] args)
+    private static void FileInfoValidator(OptionResult result)
     {
-        Console.WriteLine(RuntimeEnvironment.GetRuntimeDirectory());
-
-        var src = new SourceGenerator();
-        src.WriteTypeInfo(typeof(AA<>));
-        Console.WriteLine(src.ToString());
-        
-        /*
-        var docsOpt = new Option<FileInfo?>(
-            name: "--xml",
-            description: "The xml documentation file generated with msbuild option 'GenerateDocumentationFile'.");
-
-        var dllOpt = new Option<FileInfo?>(
-            name: "--dll",
-            description: "The managed dll compiled from your C# project.");
-
-        var root = new RootCommand("Documentation generator for C#.");
-        root.AddOption(dllOpt);
-        root.AddOption(docsOpt);
-        
-        root.SetHandler(async (dllFile, xmlFile) =>
-        {
-            if (xmlFile is null) throw new ArgumentNullException(nameof(xmlFile));
-            if (dllFile is null) throw new ArgumentNullException(nameof(dllFile));
-            
-            await Parse(dllFile, xmlFile);
-        }, dllOpt, docsOpt);
-
-        return root.InvokeAsync(args);
-        */
+        var file = result.GetValueOrDefault<FileInfo?>();
+        if (file is null || !file.Exists)
+            result.ErrorMessage = "File does not exist.";
     }
 
-    public static async Task Parse(FileInfo[] targetDll, FileInfo xmlFile)
-    {   
-        string content;
-        {
-            await using var file = new FileStream(xmlFile.FullName, FileMode.Open);
-            using var reader = new StreamReader(file);
-            content = await reader.ReadToEndAsync();
-        }
-        
-        var doc = XDocument.Parse(content);
-        var root = doc.Root;
-        if (root is null) 
-            throw new InvalidOperationException("Invalid xml data detected. The documentation xml must contain root element");
+    private static void BuildableValidator(OptionResult result)
+    {
+        var file = result.GetValueOrDefault<FileInfo?>();
+        if (file?.Extension is not (".sln" or ".csproj"))
+            result.ErrorMessage = "File is not buildable. File must be Project Solution or C# Project";
+    }
 
-        var resolver = new PathAssemblyResolver(Array.Empty<string>());
-        using (var mlc = new MetadataLoadContext(resolver))
+    private static async Task<int> Main(string[] args)
+    {
+        var root = new RootCommand("a documentation generator for C#.");
+
         {
+            var targetOption = new Option<FileInfo?>(
+                name: "--target",
+                description: "The .sln or .csproj to build documentation.");
+            targetOption.AddAlias("-t");
+            targetOption.AddValidator(FileInfoValidator);
+            targetOption.AddValidator(BuildableValidator);
+
+            var settingsOption = new Option<FileInfo?>(
+                name: "--settings",
+                description: "The configuration file.");
+            settingsOption.AddAlias("-s");
+            settingsOption.AddValidator(FileInfoValidator);
+
+            var configOption = new Option<string?>(
+                name: "--configuration",
+                description: "The build configuration. Usually one of 'Debug' or 'Release'. Can be inherited from the configuration file.");
+            configOption.AddAlias("-c");
+            configOption.AddCompletions("Debug", "Release");
+
+            var platformOption = new Option<string?>(
+                name: "--platform",
+                description: "The build target platform. Usually one of 'x64' or 'x86'. Can be inherited from the configuration file.");
+            platformOption.AddAlias("-p");
+            platformOption.AddCompletions("x64", "x86");
+
+            var build = new Command("build", "Build xml documentation for .sln or .csproj")
+            {
+                targetOption,
+                settingsOption,
+                configOption,
+                platformOption
+            };
+            build.AddAlias("b");
+            build.SetHandler(async (target, settings, config, platform) =>
+            {
+                if (string.Equals(".sln", target.Extension))
+                {
+                    var msbuild = MSBuildWorkspace.Create();
+
+                    var sln = await msbuild.OpenSolutionAsync(target.FullName, new ConsoleLogger());
+
+                    var leaves = sln.Projects.ToList();
+                    foreach (var project in sln.Projects)
+                    {
+                        for (var i = 0; i < leaves.Count; ++i)
+                        {
+                            if (project.ProjectReferences.Any(reference => reference.ProjectId == leaves[i].Id))
+                                leaves.RemoveAt(i);
+                        }
+                    }
+
+                    foreach (var leaf in leaves)
+                    {
+                        if (!leaf.TryGetCompilation(out var compilation))
+                            continue;
+                    }
+                }
+                else if (string.Equals(".csproj", target.Extension))
+                {
+                    var msbuild = MSBuildWorkspace.Create();
+
+                    var csproj = await msbuild.OpenProjectAsync(target.FullName, new ConsoleLogger());
+                    if (!csproj.TryGetCompilation(out var compilation))
+                        ; // TODO : handle failed
+                }
+                else
+                {
+
+                }
+            }, targetOption, settingsOption, configOption, platformOption);
+
+            root.AddCommand(build);
         }
+
+        return await root.InvokeAsync(args);
     }
 }
