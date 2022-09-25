@@ -1,0 +1,89 @@
+﻿@page "/api/{identifier?}"
+
+@using Documentation.CSharp.Web.Compiler
+@using Documentation.CSharp.Web.Primitives;
+
+@inject HttpClient Http
+@inject ILogger<APIBrowser> Logger
+
+<div class="side-nav-container">
+    <div class="search-box-container">
+        <input class="search-box" type="search" placeholder="Search"/>
+    </div>
+    <div class="side-nav">
+        <TreeView Data="Nodes" Handler="OnClicked"/>
+    </div>
+</div>
+
+<main>
+    <article>
+        <MarkdownViewer Data="@Body" @ref="Viewer" />
+    </article>
+</main>
+
+@code {
+    [Parameter]
+    public string? Identifier { get; set; }
+
+    private string? Body { get; set; }
+
+    private TreeNode[] Nodes { get; set; } = Array.Empty<TreeNode>();
+
+    private MarkdownViewer? Viewer { get; set; }
+
+    private async void OnClicked(TreeNode node)
+    {
+        Logger.LogInformation($"{node.Text} clicked");
+        var view = ParameterView.FromDictionary(new Dictionary<string, object?>()
+        {
+            { "Data", DocumentCompiler.ToMarkdown(node.Data ?? "") }
+        });
+        await Viewer!.SetParametersAsync(view);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Logger.LogInformation("Loading documentation...");
+
+        var data = await Http.GetFromJsonAsync<Dictionary<string, DeclarationInfoImport[]>>("/data/docs.json");
+        if (data is null)
+        {
+            Logger.LogCritical("Cannot query a documentation file.");
+        }
+        else
+        {
+            Nodes = data.Select(pair => new TreeNode(null, pair.Key,
+                pair.Value.Select(d =>
+                {
+                    var text = d.Title;
+                    var children = new List<TreeNode>();
+                    children.Add(new TreeNode(d.Declaration, "Declaration", Array.Empty<TreeNode>()));
+                    if (d.Methods.Length > 0)
+                    {
+                        children.Add(new TreeNode(null, "Methods", d.Methods.Select(method =>
+                            new TreeNode(method.Declaration, method.Title ?? "", Array.Empty<TreeNode>())).ToArray()));
+                    }
+                    if (d.Events.Length > 0)
+                    {
+                        children.Add(new TreeNode(null, "Events", d.Events.Select(@event =>
+                            new TreeNode(@event.Declaration, @event.Title ?? "", Array.Empty<TreeNode>())).ToArray()));
+                    }
+                    if (d.Properties.Length > 0)
+                    {
+                        children.Add(new TreeNode(null, "Properties", d.Properties.Select(property =>
+                            new TreeNode(property.Declaration, property.Title ?? "", Array.Empty<TreeNode>())).ToArray()));
+                    }
+                    if (d.Fields.Length > 0)
+                    {
+                        children.Add(new TreeNode(null, "Fields", d.Fields.Select(field =>
+                            new TreeNode(field.Declaration, field.Title ?? "", Array.Empty<TreeNode>())).ToArray()));
+                    }
+                    return new TreeNode(null, text ?? "", children.ToArray());
+                }).ToArray())).ToArray();
+
+            Logger.LogInformation("Documentation loaded.");
+        }
+
+        await base.OnInitializedAsync();
+    }
+}
