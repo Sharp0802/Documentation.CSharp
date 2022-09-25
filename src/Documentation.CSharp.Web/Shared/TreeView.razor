@@ -1,0 +1,23 @@
+﻿@using Documentation.CSharp.Web.Primitives;
+
+@inject ILogger<TreeView> Logger
+
+<div class="tree-view">
+    <ul class="tree-view-root">
+        @if (Data is not null)
+        {
+            @foreach (var child in Data)
+            {
+                <TreeViewNode Data="child" Handler="@(Handler ?? throw new NullReferenceException("handler is null"))"/>
+            }
+        }
+    </ul>
+</div>
+
+@code {
+    [Parameter]
+    public TreeNode[]? Data { get; set; }
+
+    [Parameter]
+    public Action<TreeNode>? Handler { get; set; }
+}
