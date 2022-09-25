@@ -1,0 +1,37 @@
+﻿@using Documentation.CSharp.Web.Primitives
+
+@inject ILogger<TreeViewNode> Logger
+
+<li>
+    @if (Data.Children.Length <= 0)
+    {
+        <span @onclick="OnClicked"><a>@Data.Text</a></span>
+    }
+    else
+    {
+        <span class="caret @(Expanded ? "caret-down" : "")" @onclick="@(() => Expanded = !Expanded)">@Data.Text</span>
+        <ul class="@(Expanded ? "" : "collapse")" >
+            @foreach (var child in Data.Children)
+            {
+                <TreeViewNode Data="child" Handler="@(Handler ?? throw new NullReferenceException("handler is null"))"/>
+            }
+        </ul>
+    }
+</li>
+
+@code {
+    [Parameter]
+    public TreeNode Data { get; set; } = new(null, "", Array.Empty<TreeNode>());
+
+    [Parameter]
+    public Action<TreeNode>? Handler { get; set; }
+
+    private bool Expanded { get; set; } = false;
+
+    private void OnClicked()
+    {
+        if (Handler is null)
+            Logger.LogError("handler is null");
+        Handler?.Invoke(Data);
+    }
+}

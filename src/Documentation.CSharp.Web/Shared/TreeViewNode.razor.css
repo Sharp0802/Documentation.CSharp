@@ -1,0 +1,33 @@
+﻿ul {
+    cursor: pointer;
+    list-style-type: none;
+    padding-left: 16px;
+    user-select: none;
+}
+
+li {
+    padding-top: 16px;
+}
+
+li > span::before {
+    content: ">";
+    color: transparent;
+    display: inline-block;
+    margin-right: 6px;
+}
+
+li > span:not(.caret), li > span:not(.caret-down) {
+}
+
+.caret::before {
+    transition-duration: 100ms;
+    color: var(--text-color-primary) !important;
+}
+
+.caret-down::before {
+    transform: rotate(90deg);
+}
+
+.tree-view-root > li:nth-child(1) {
+    padding-top: 0 !important;
+}
