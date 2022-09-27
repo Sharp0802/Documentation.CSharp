@@ -1,0 +1,73 @@
+{
+  "Documentation.CSharp": [
+    {
+      "Title": "AAA<T, TBB>",
+      "Declaration": "public delegate int AAA<T, TBB>(T a, TBB b) where TBB : unmanaged;",
+      "Kind": 1,
+      "Documentation": "<member name=\"T:Documentation.CSharp.AAA`2\">\r\n    <summary>\r\n    <see cref=\"T:System.Exception\"/>\r\n    </summary>\r\n    <typeparam name=\"T\"></typeparam>\r\n    <typeparam name=\"TBB\"></typeparam>\r\n    <param name=\"a\"></param>\r\n    <param name=\"b\"></param>\r\n    <returns></returns>\r\n</member>\r\n",
+      "IsDeclared": true,
+      "Methods": [],
+      "Events": [],
+      "Properties": [],
+      "Fields": []
+    },
+    {
+      "Title": "AA<T>",
+      "Declaration": "public abstract class AA<T> where T : unmanaged",
+      "Kind": 0,
+      "Documentation": "<member name=\"T:Documentation.CSharp.AA`1\">\r\n    <summary>\r\n    aaaa\r\n    </summary>\r\n    <typeparam name=\"T\"></typeparam>\r\n</member>\r\n",
+      "IsDeclared": true,
+      "Methods": [],
+      "Events": [
+        {
+          "Title": "_ii",
+          "Declaration": "public event System.Func<int> _ii { add; remove; }",
+          "Kind": 3,
+          "Documentation": "<member name=\"E:Documentation.CSharp.AA`1._ii\">\r\n    <summary>\r\n    \r\n    </summary>\r\n</member>\r\n",
+          "IsDeclared": true,
+          "Methods": [],
+          "Events": [],
+          "Properties": [],
+          "Fields": []
+        },
+        {
+          "Title": "_ee",
+          "Declaration": "public event System.Func<int> _ee { add; remove; }",
+          "Kind": 3,
+          "Documentation": "<member name=\"E:Documentation.CSharp.AA`1._ee\">\r\n    <summary>\r\n    \r\n    </summary>\r\n</member>\r\n",
+          "IsDeclared": true,
+          "Methods": [],
+          "Events": [],
+          "Properties": [],
+          "Fields": []
+        }
+      ],
+      "Properties": [
+        {
+          "Title": "PP",
+          "Declaration": "private protected unsafe int* PP { get; }",
+          "Kind": 4,
+          "Documentation": "<member name=\"P:Documentation.CSharp.AA`1.PP\">\r\n    <summary>\r\n    \r\n    </summary>\r\n</member>\r\n",
+          "IsDeclared": true,
+          "Methods": [],
+          "Events": [],
+          "Properties": [],
+          "Fields": []
+        }
+      ],
+      "Fields": [
+        {
+          "Title": "_pp",
+          "Declaration": "protected internal int* _pp;",
+          "Kind": 5,
+          "Documentation": "<member name=\"F:Documentation.CSharp.AA`1._pp\">\r\n    <summary>\r\n    \r\n    </summary>\r\n</member>\r\n",
+          "IsDeclared": true,
+          "Methods": [],
+          "Events": [],
+          "Properties": [],
+          "Fields": []
+        }
+      ]
+    }
+  ]
+}
