@@ -36,7 +36,7 @@
         Logger.LogInformation($"{node.Text} clicked");
         var view = ParameterView.FromDictionary(new Dictionary<string, object?>()
         {
-            { "Data", DocumentCompiler.ToMarkdown(node.Data ?? "") }
+            { "Data", DocumentCompiler.ToMarkdown((DeclarationInfoImport?) node.Data) }
         });
         await Viewer!.SetParametersAsync(view);
     }
@@ -57,26 +57,26 @@
                 {
                     var text = d.Title;
                     var children = new List<TreeNode>();
-                    children.Add(new TreeNode(d.Declaration, "Declaration", Array.Empty<TreeNode>()));
+                    children.Add(new TreeNode(d, "Declaration", Array.Empty<TreeNode>()));
                     if (d.Methods.Length > 0)
                     {
                         children.Add(new TreeNode(null, "Methods", d.Methods.Select(method =>
-                            new TreeNode(method.Declaration, method.Title ?? "", Array.Empty<TreeNode>())).ToArray()));
+                            new TreeNode(method, method.Title ?? "", Array.Empty<TreeNode>())).ToArray()));
                     }
                     if (d.Events.Length > 0)
                     {
                         children.Add(new TreeNode(null, "Events", d.Events.Select(@event =>
-                            new TreeNode(@event.Declaration, @event.Title ?? "", Array.Empty<TreeNode>())).ToArray()));
+                            new TreeNode(@event, @event.Title ?? "", Array.Empty<TreeNode>())).ToArray()));
                     }
                     if (d.Properties.Length > 0)
                     {
                         children.Add(new TreeNode(null, "Properties", d.Properties.Select(property =>
-                            new TreeNode(property.Declaration, property.Title ?? "", Array.Empty<TreeNode>())).ToArray()));
+                            new TreeNode(property, property.Title ?? "", Array.Empty<TreeNode>())).ToArray()));
                     }
                     if (d.Fields.Length > 0)
                     {
                         children.Add(new TreeNode(null, "Fields", d.Fields.Select(field =>
-                            new TreeNode(field.Declaration, field.Title ?? "", Array.Empty<TreeNode>())).ToArray()));
+                            new TreeNode(field, field.Title ?? "", Array.Empty<TreeNode>())).ToArray()));
                     }
                     return new TreeNode(null, text ?? "", children.ToArray());
                 }).ToArray())).ToArray();
