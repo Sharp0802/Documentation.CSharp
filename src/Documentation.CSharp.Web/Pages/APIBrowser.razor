@@ -1,6 +1,5 @@
 ﻿@page "/api/{identifier?}"
 
-@using Documentation.CSharp.Web.Compiler
 @using Documentation.CSharp.Web.Primitives;
 
 @inject HttpClient Http
@@ -36,7 +35,7 @@
         Logger.LogInformation($"{node.Text} clicked");
         var view = ParameterView.FromDictionary(new Dictionary<string, object?>()
         {
-            { "Data", DocumentCompiler.ToMarkdown((DeclarationInfoImport?) node.Data) }
+            { "Data", ((DeclarationInfoImport?) node.Data)?.Documentation }
         });
         await Viewer!.SetParametersAsync(view);
     }
