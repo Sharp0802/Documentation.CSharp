@@ -5,6 +5,7 @@ public class DeclarationInfoImport
     public string? Title { get; set; }
     public string? Declaration { get; set; }
     public int Kind { get; set; }
+    public string? Id { get; set; }
     public string? Documentation { get; set; }
     public bool IsDeclared { get; set; }
 

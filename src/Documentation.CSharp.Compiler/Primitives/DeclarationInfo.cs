@@ -12,6 +12,7 @@ public class DeclarationInfo
         Declaration = declaration;
         Kind = kind;
         Symbol = symbol;
+        Id = Symbol.GetDocumentationCommentId();
         Documentation = Symbol.GetDocumentationCommentXml(expandIncludes: true);
         IsDeclared = Symbol.DeclaringSyntaxReferences.Length > 0;
     }
@@ -22,6 +23,7 @@ public class DeclarationInfo
     public string Title { get; }
     public string Declaration { get; }
     public DeclarationKind Kind { get; }
+    public string? Id { get; }
     public string? Documentation { get; }
     public bool IsDeclared { get; }
 
