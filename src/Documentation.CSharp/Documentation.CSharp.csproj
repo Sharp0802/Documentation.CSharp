@@ -4,7 +4,6 @@
         <Platforms>x86;x64</Platforms>
         <Configurations>Debug;Release</Configurations>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <ServerGarbageCollection>true</ServerGarbageCollection>
     </PropertyGroup>
     
