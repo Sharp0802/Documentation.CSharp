@@ -36,7 +36,7 @@ public static class DocumentationCompiler
             file.Name, 
             globalList.ToDictionary(pair => pair.Key, pair => pair.Value.ToArray()));
             
-        var dir = Path.Combine(file.DirectoryName ?? "", $"{compilation.AssemblyName}.g.json");
+        var dir = Path.Combine(file.DirectoryName ?? "", $"{compilation.AssemblyName}.json");
         using var stream = new FileStream(dir, FileMode.Create);
         JsonSerializer.Serialize(stream, target, typeof(SerializeTarget), PrimitiveSerializingContext.Default);
     }
