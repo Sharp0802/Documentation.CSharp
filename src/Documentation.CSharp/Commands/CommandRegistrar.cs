@@ -1,23 +1,17 @@
-﻿using System.Collections.Immutable;
-using System.CommandLine;
+﻿using System.CommandLine;
 
 namespace Documentation.CSharp.Commands;
 
 public class CommandRegistrar
 {
-    public CommandRegistrar()
+    static CommandRegistrar()
     {
-        CommandRegistrations = typeof(CommandRegistrar).Assembly
-            .GetTypes()
-            .Where(t => t.IsSubclassOf(typeof(CommandRegistration)))
-            .Select(Activator.CreateInstance)
-            .Cast<CommandRegistration>()
-            .ToImmutableArray();
+        CommandRegistrations = CommandRegistration.GetRegistrationTypes();
     }
-    
-    private ImmutableArray<CommandRegistration> CommandRegistrations { get; }
 
-    public void ApplyCommands(RootCommand root)
+    private static IEnumerable<CommandRegistration> CommandRegistrations { get; }
+
+    public static void ApplyCommands(RootCommand root)
     {
         foreach (var registration in CommandRegistrations)
             registration.Register(root);
