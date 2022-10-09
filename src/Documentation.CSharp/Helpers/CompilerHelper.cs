@@ -76,21 +76,26 @@ public class CompilerHelper
         project.ReevaluateIfNecessary();
 
         var output = Path.ChangeExtension(project.FullPath, ".g.csproj");
-        project.Save(output);
-        
-        using var workspace = MSBuildWorkspace.Create();
-        var roslynProject = await workspace.OpenProjectAsync(output, new ConsoleLogger(LoggerVerbosity.Minimal));
-
-        var compilation = await roslynProject.GetCompilationAsync();
         try
         {
+            project.Save(output);
+
+            using var workspace = MSBuildWorkspace.Create();
+            var roslynProject = await workspace.OpenProjectAsync(output, new ConsoleLogger(LoggerVerbosity.Normal));
+
+            var compilation = await roslynProject.GetCompilationAsync();
             if (compilation is null) throw new ExternalException("Failed to get compilation.");
-            
+
             DocumentationCompiler.Execute(new FileInfo(output), compilation);
         }
         catch (Exception e)
         {
             Logger.LogError(e, "Failed to generate documentation file.");
+        }
+        finally
+        {
+            if (File.Exists(output))
+                File.Delete(output);
         }
     }
 }
