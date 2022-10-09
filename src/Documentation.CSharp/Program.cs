@@ -1,20 +1,14 @@
-﻿using Documentation.CSharp.Commands;
-using Documentation.CSharp.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+﻿using System.CommandLine;
+using Documentation.CSharp.Commands;
 
 namespace Documentation.CSharp;
 
 internal static class Program
 {
-    private static Task Main(string[] args)
+    private static async Task Main(string[] args)
     {
-        return Host
-            .CreateDefaultBuilder(args)
-            .ConfigureServices(services => services
-                .AddSingleton<CommandRegistrar>()
-                .AddHostedService<CommandLineService>())
-            .Build()
-            .RunAsync();
+        var root = new RootCommand("a documentation generator for C#.");
+        CommandRegistrar.ApplyCommands(root);
+        await root.InvokeAsync(args);
     }
 }
