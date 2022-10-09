@@ -6,6 +6,7 @@
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <DocumentRequired>true</DocumentRequired>
     </PropertyGroup>
 
 </Project>
