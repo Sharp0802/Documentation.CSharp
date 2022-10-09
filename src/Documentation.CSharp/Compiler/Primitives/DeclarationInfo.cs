@@ -1,9 +1,8 @@
-﻿using System.Text.Json.Serialization;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 
 namespace Documentation.CSharp.Compiler.Primitives;
 
-public class DeclarationInfoHelper
+public static class DeclarationInfoHelper
 {
     public static DeclarationInfo Create(
         ISymbol symbol, 

@@ -30,7 +30,7 @@ public class DelegateDeclarationViewer : DeclarationViewer
 
         builder
             .Append("delegate ")
-            .Append(delegateSyntax.ReturnType.ToString())
+            .Append(delegateSyntax.ReturnType)
             .Append(' ')
             .Append(symbol.Name)
             .Append(ViewGenericParameters(symbol))

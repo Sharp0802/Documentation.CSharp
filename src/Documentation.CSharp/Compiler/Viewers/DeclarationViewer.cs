@@ -311,7 +311,7 @@ public abstract class DeclarationViewer
         {
             builder
                 .Append(' ')
-                .Append(syntax.Default!.ToString());
+                .Append(syntax.Default);
         }
 
         return builder.ToString();

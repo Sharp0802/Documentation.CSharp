@@ -1,6 +1,5 @@
 ﻿using Documentation.CSharp.Compiler.Primitives;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Documentation.CSharp.Compiler.Viewers;
 

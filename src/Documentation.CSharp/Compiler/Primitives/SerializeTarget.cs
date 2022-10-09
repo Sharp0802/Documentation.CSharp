@@ -1,6 +1,6 @@
 ﻿namespace Documentation.CSharp.Compiler.Primitives;
 
-public class SerializeTargetHelper
+public static class SerializeTargetHelper
 {
     public static SerializeTarget Create(
         string assemblyFile,
