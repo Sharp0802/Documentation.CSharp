@@ -1,15 +1,23 @@
 ﻿namespace Documentation.CSharp.Compiler.Primitives;
 
-public class SerializeTarget
+public class SerializeTargetHelper
 {
-    public SerializeTarget(
-        string assemblyFile, 
+    public static SerializeTarget Create(
+        string assemblyFile,
         Dictionary<string, DeclarationInfo[]> declarations)
     {
-        AssemblyFile = assemblyFile;
-        Declarations = declarations;
+        var target = new SerializeTarget
+        {
+            AssemblyFile = assemblyFile,
+            Declarations = declarations
+        };
+        
+        return target;
     }
+}
 
-    public string AssemblyFile { get; set; }
-    public Dictionary<string, DeclarationInfo[]> Declarations { get; set; }
+public class SerializeTarget
+{
+    public string? AssemblyFile { get; set; }
+    public Dictionary<string, DeclarationInfo[]>? Declarations { get; set; }
 }

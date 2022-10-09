@@ -67,7 +67,7 @@ public static class Declaration
             }
         }
 
-        return new DeclarationInfo(
+        return DeclarationInfoHelper.Create(
             symbol, 
             $"{symbol.Name}{DeclarationViewer.ViewGenericParameters(symbol)}", 
             assemblyFile, 

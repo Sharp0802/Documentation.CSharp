@@ -3,9 +3,9 @@ using Microsoft.CodeAnalysis;
 
 namespace Documentation.CSharp.Compiler.Primitives;
 
-public class DeclarationInfo
+public class DeclarationInfoHelper
 {
-    public DeclarationInfo(
+    public static DeclarationInfo Create(
         ISymbol symbol, 
         string title, 
         string assemblyFile, 
@@ -16,34 +16,38 @@ public class DeclarationInfo
         DeclarationInfo[] properties, 
         DeclarationInfo[] fields)
     {
-        Symbol = symbol;
-        Title = title;
-        Declaration = declaration;
-        AssemblyFile = assemblyFile;
-        Kind = kind;
-        Id = Symbol.GetDocumentationCommentId();
-        Documentation = Symbol.GetDocumentationCommentXml(expandIncludes: true);
-        IsDeclared = Symbol.DeclaringSyntaxReferences.Length > 0;
-        
-        Methods = methods;
-        Events = events;
-        Properties = properties;
-        Fields = fields;
+        var decl = new DeclarationInfo
+        {
+            Title = title,
+            Declaration = declaration,
+            AssemblyFile = assemblyFile,
+            Kind = kind,
+            Id = symbol.GetDocumentationCommentId(),
+            Documentation = symbol.GetDocumentationCommentXml(expandIncludes: true),
+            IsDeclared = symbol.DeclaringSyntaxReferences.Length > 0,
+            
+            Methods = methods,
+            Events = events,
+            Properties = properties,
+            Fields = fields
+        };
+
+        return decl;
     }
+}
 
-    [JsonIgnore]
-    public ISymbol? Symbol { get; set; }
-
-    public string Title { get; set; }
-    public string AssemblyFile { get; set; }
-    public string Declaration { get; set; }
+public class DeclarationInfo
+{
+    public string? Title { get; set; }
+    public string? AssemblyFile { get; set; }
+    public string? Declaration { get; set; }
     public DeclarationKind Kind { get; set; }
     public string? Id { get; set; }
     public string? Documentation { get; set; }
     public bool IsDeclared { get; set; }
 
-    public DeclarationInfo[] Methods { get; set; }
-    public DeclarationInfo[] Events { get; set; }
-    public DeclarationInfo[] Properties { get; set; }
-    public DeclarationInfo[] Fields { get; set; }
+    public DeclarationInfo[]? Methods { get; set; }
+    public DeclarationInfo[]? Events { get; set; }
+    public DeclarationInfo[]? Properties { get; set; }
+    public DeclarationInfo[]? Fields { get; set; }
 }
