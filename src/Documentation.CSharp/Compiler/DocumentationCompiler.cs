@@ -32,10 +32,12 @@ public static class DocumentationCompiler
                     });
             });
 
-        var target = new SerializeTarget(file.Name, globalList.ToDictionary(p => p.Key, p => p.Value.ToArray()));
+        var target = SerializeTargetHelper.Create(
+            file.Name, 
+            globalList.ToDictionary(pair => pair.Key, pair => pair.Value.ToArray()));
             
         var dir = Path.Combine(file.DirectoryName ?? "", $"{compilation.AssemblyName}.g.json");
         using var stream = new FileStream(dir, FileMode.Create);
-        JsonSerializer.Serialize(stream, target);
+        JsonSerializer.Serialize(stream, target, typeof(SerializeTarget), PrimitiveSerializingContext.Default);
     }
 }
