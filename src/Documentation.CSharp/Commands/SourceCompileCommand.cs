@@ -1,8 +1,6 @@
 ﻿using System.CommandLine;
 using System.CommandLine.Parsing;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Logging;
-using Microsoft.CodeAnalysis.MSBuild;
+using Documentation.CSharp.Helpers;
 using Microsoft.Extensions.Logging;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
@@ -10,7 +8,9 @@ namespace Documentation.CSharp.Commands;
 
 public class SourceCompileCommand : CommandRegistration
 {
-    public SourceCompileCommand(ILogger logger) : base(logger) {}
+    public SourceCompileCommand(ILogger logger) : base(logger)
+    {
+    }
     
     private static void FileInfoValidator(OptionResult result)
     {
@@ -64,41 +64,28 @@ public class SourceCompileCommand : CommandRegistration
         
         build.SetHandler(async (target, settings, config, platform) =>
         {
-            if (string.Equals(".sln", target.Extension))
+            if (target is null)
             {
-                var msbuild = MSBuildWorkspace.Create();
-
-                var sln = await msbuild.OpenSolutionAsync(target.FullName, new ConsoleLogger(LoggerVerbosity.Detailed));
-
-                var leaves = sln.Projects.ToList();
-                foreach (var project in sln.Projects)
-                {
-                    for (var i = 0; i < leaves.Count; ++i)
-                    {
-                        if (project.ProjectReferences.Any(reference => reference.ProjectId == leaves[i].Id))
-                            leaves.RemoveAt(i);
-                    }
-                }
-
-                if (leaves.Count <= 0)
-                    Logger.Log(LogLevel.Warning, "No documentated assembly founded. No document will be builded.");
-                else
-                    Logger.Log(LogLevel.Information, $"{leaves.Count} documented project(s) found.");
-
-                foreach (var leaf in leaves)
-                {
-                    if (!leaf.TryGetCompilation(out var compilation))
-                        continue;
-                }
+                Logger.LogCritical("Cannot load given build target.");
+                return;
             }
-            else if (string.Equals(".csproj", target.Extension))
+            
+            Environment.SetEnvironmentVariable("DCSOutputPath", target.DirectoryName, EnvironmentVariableTarget.User);
+
+            try
             {
-                var msbuild = MSBuildWorkspace.Create();
-
-                var csproj = await msbuild.OpenProjectAsync(target.FullName, new ConsoleLogger(LoggerVerbosity.Detailed));
-                if (!csproj.TryGetCompilation(out var compilation))
-                    ; // TODO : handle failed
+                var workspace = new CompilerHelper(config, platform);
+                workspace.Initialize();
+                if (string.Equals(".sln", target.Extension))
+                    await workspace.BuildSolutionAsync(target.FullName);
+                else if (string.Equals(".csproj", target.Extension)) 
+                    await workspace.BuildProjectAsync(target.FullName);
             }
+            finally
+            {
+                Environment.SetEnvironmentVariable("DCSOutputPath", null, EnvironmentVariableTarget.User);
+            }
+            
         }, targetOption, settingsOption, configOption, platformOption);
 
         root.AddCommand(build);
