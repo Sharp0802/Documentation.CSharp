@@ -30,7 +30,11 @@ public static class Declaration
         return Viewers.Any(v => v.IsSupported(syntax, symbol));
     }
 
-    public static DeclarationInfo? View(string assemblyFile, SemanticModel semantic, SyntaxNode syntax)
+    public static DeclarationInfo? View(
+        string assemblyFile, 
+        Compilation compilation, 
+        SemanticModel semantic, 
+        SyntaxNode syntax)
     {
         var symbol = semantic.GetDeclaredSymbol(syntax);
         if (symbol is null) return null;
@@ -52,7 +56,7 @@ public static class Declaration
                          .Where(HasComment)
                          .Select(member => member.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax())
                          .Where(childSyntax => childSyntax is not null)
-                         .Select(childSyntax => View(assemblyFile, semantic, childSyntax!))
+                         .Select(childSyntax => View(assemblyFile, compilation, semantic, childSyntax!))
                          .Where(child => child is not null))
             {
                 (child!.Kind switch
@@ -67,6 +71,7 @@ public static class Declaration
         }
 
         return DeclarationInfoHelper.Create(
+            compilation,
             symbol, 
             $"{symbol.Name}{DeclarationViewer.ViewGenericParameters(symbol)}", 
             assemblyFile, 

@@ -1,10 +1,12 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using Documentation.CSharp.Compiler.Rendering;
+using Microsoft.CodeAnalysis;
 
 namespace Documentation.CSharp.Compiler.Primitives;
 
 public static class DeclarationInfoHelper
 {
     public static DeclarationInfo Create(
+        Compilation compilation,
         ISymbol symbol, 
         string title, 
         string assemblyFile, 
@@ -22,7 +24,9 @@ public static class DeclarationInfoHelper
             AssemblyFile = assemblyFile,
             Kind = kind,
             Id = symbol.GetDocumentationCommentId(),
-            Documentation = symbol.GetDocumentationCommentXml(expandIncludes: true),
+            Documentation = DocumentationRenderer.Render(
+                compilation, 
+                symbol.GetDocumentationCommentXml(expandIncludes: true) ?? ""),
             IsDeclared = symbol.DeclaringSyntaxReferences.Length > 0,
             
             Methods = methods,

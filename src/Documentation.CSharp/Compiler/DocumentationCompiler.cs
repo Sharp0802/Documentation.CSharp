@@ -21,7 +21,7 @@ public static class DocumentationCompiler
                 if (symbol is not INamedTypeSymbol) return;
                 if (!Declaration.IsSupported(node, symbol)) return;
 
-                var decl = Declaration.View(file.Name, semantic, node);
+                var decl = Declaration.View(file.Name, compilation, semantic, node);
                 if (decl is null) return;
                 globalList.AddOrUpdate(symbol.ContainingNamespace.ToDisplayString(),
                     _ => new ConcurrentBag<DeclarationInfo> { decl },
